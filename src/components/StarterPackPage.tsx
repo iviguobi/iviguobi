@@ -129,18 +129,21 @@ function StarterPackContent() {
     setError(null);
   };
 
-  const handleAddressSubmit = async (address: DeliveryAddress) => {
+ const handleAddressSubmit = async (address: DeliveryAddress) => {
   try {
+    // Save the address and close modal first
     setPendingAddress(address);
     setShowAddressModal(false);
+    setError(null);
 
-    // 👇 Call processOrder directly — it will handle both free and paid orders
-    await processOrder(address);
+    // ❌ Don't process order yet — the user will review payment first.
+    // The Pay button in the payment section will now trigger processOrder()
   } catch (error) {
     console.error('Error submitting address:', error);
     setError('Failed to submit address');
   }
 };
+
 
 
 const processOrder = async (address: DeliveryAddress) => {
