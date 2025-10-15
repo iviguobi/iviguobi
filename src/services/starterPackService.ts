@@ -170,40 +170,57 @@ export class StarterPackService {
     }
   }
 
-  static async updateOrderStatus(
-    orderId: string,
-    status: 'pending' | 'received' | 'preparing' | 'configuring' | 'out_for_delivery' | 'delivered'
-  ): Promise<void> {
-    try {
-      const { data: order } = await supabase
-        .from('starter_pack_orders')
-        .select('status_timestamps')
-        .eq('id', orderId)
-        .maybeSingle();
+static async updateOrderStatus(
+  orderId: string,
+  status: 'pending' | 'received' | 'preparing' | 'configuring' | 'out_for_delivery' | 'delivered'
+): Promise<void> {
+  try {
+    const { data: order } = await supabase
+      .from('starter_pack_orders')
+      .select('status_timestamps')
+      .eq('id', orderId)
+      .maybeSingle();
 
-      const timestamps = order?.status_timestamps || {};
-      timestamps[status] = new Date().toISOString();
+    // ✅ Fix: ensure it's parsed from string → object
+    let timestamps: Record<string, string> = {};
 
-      const updateData: any = {
-        order_status: status,
-        status_timestamps: timestamps
-      };
-
-      if (status === 'delivered') {
-        updateData.delivered_at = new Date().toISOString();
+    if (order?.status_timestamps) {
+      if (typeof order.status_timestamps === 'string') {
+        try {
+          timestamps = JSON.parse(order.status_timestamps);
+        } catch {
+          console.warn('Invalid JSON in status_timestamps, resetting to empty object');
+          timestamps = {};
+        }
+      } else {
+        timestamps = order.status_timestamps;
       }
-
-      const { error } = await supabase
-        .from('starter_pack_orders')
-        .update(updateData)
-        .eq('id', orderId);
-
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Error updating order status:', error);
-      throw error;
     }
+
+    // ✅ Add the new timestamp
+    timestamps[status] = new Date().toISOString();
+
+    const updateData: any = {
+      order_status: status,
+      status_timestamps: timestamps, // Supabase will handle JSON object fine if column type is json/jsonb
+    };
+
+    if (status === 'delivered') {
+      updateData.delivered_at = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from('starter_pack_orders')
+      .update(updateData)
+      .eq('id', orderId);
+
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error updating order status:', error);
+    throw error;
   }
+}
+
 
   static async getAllOrders(): Promise<StarterPackOrder[]> {
     try {
