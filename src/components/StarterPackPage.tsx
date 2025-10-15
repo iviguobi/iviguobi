@@ -130,14 +130,24 @@ function StarterPackContent() {
   };
 
   const handleAddressSubmit = async (address: DeliveryAddress) => {
-    if (order.total_cost > 0) {
+  try {
+    // Create a temporary order first to check cost
+    const tempOrder = await StarterPackService.createOrder(user!.id, includesTablet, address);
 
+    if (tempOrder.total_cost > 0) {
+      // Payment required (subsequent or tablet order)
       setPendingAddress(address);
       setShowAddressModal(false);
     } else {
+      // Free (first) order, proceed directly
       await processOrder(address);
     }
-  };
+  } catch (error) {
+    console.error('Error submitting address:', error);
+    setError('Failed to submit address');
+  }
+};
+
 
 const processOrder = async (address: DeliveryAddress) => {
   setIsProcessing(true);
