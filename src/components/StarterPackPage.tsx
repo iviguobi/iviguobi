@@ -138,68 +138,66 @@ function StarterPackContent() {
     }
   };
 
-  const processOrder = async (address: DeliveryAddress) => {
-    setIsProcessing(true);
-    setError(null);
+const processOrder = async (address: DeliveryAddress) => {
+  setIsProcessing(true);
+  setError(null);
 
-    try {
-      const order = await StarterPackService.createOrder(user!.id, includesTablet, address);
+  try {
+    // 1️⃣ Create the order
+    const order = await StarterPackService.createOrder(user!.id, includesTablet, address);
 
-      if (includesTablet) {
-        if (!stripe || !elements) {
-          throw new Error('Stripe not initialized');
+    // 2️⃣ If total_cost > 0, we need to charge (regardless of tablet)
+    if (order.total_cost > 0) {
+      if (!stripe || !elements) throw new Error('Stripe not initialized');
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-starterpack-payment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            amount: order.total_cost, // already in AED, no *100
+            metadata: { orderId: order.id, orderType: "starter_pack" },
+          }),
         }
+      );
 
-   const { data: { session } } = await supabase.auth.getSession();
+      if (!response.ok) throw new Error('Payment initialization failed');
 
-const response = await fetch(
-  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-starterpack-payment`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${session?.access_token}`,
-    },
-    body: JSON.stringify({
-      amount: order.total_cost, // don’t multiply by 100!
-      metadata: { orderId: order.id, orderType: "starter_pack" },
-            })
-          }
-        );
+      const { clientSecret } = await response.json();
+      const cardElement = elements.getElement(CardElement);
+      if (!cardElement) throw new Error('Card element not found');
 
-        if (!response.ok) {
-          throw new Error('Payment initialization failed');
-        }
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement },
+      });
 
-        const { clientSecret } = await response.json();
-        const cardElement = elements.getElement(CardElement);
+      if (stripeError) throw new Error(stripeError.message);
 
-        if (!cardElement) {
-          throw new Error('Card element not found');
-        }
-
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: { card: cardElement }
-        });
-
-        if (stripeError) {
-          throw new Error(stripeError.message);
-        }
-
-        await StarterPackService.updateOrderPaymentStatus(order.id, paymentIntent!.id, 'completed');
-      }
-
-      await loadOrders();
-      setIncludesTablet(false);
-      setPendingAddress(null);
-      setShowAddressModal(false);
-    } catch (err: any) {
-      console.error('Error creating order:', err);
-      setError(err.message || 'Failed to create order');
-    } finally {
-      setIsProcessing(false);
+      await StarterPackService.updateOrderPaymentStatus(order.id, paymentIntent!.id, 'completed');
+    } else {
+      // 3️⃣ Free (first-time) order, mark as complete directly
+      await StarterPackService.updateOrderPaymentStatus(order.id, null, 'completed');
     }
-  };
+
+    // 4️⃣ Refresh UI & close modal
+    await loadOrders();
+    setIncludesTablet(false);
+    setPendingAddress(null);
+    setShowAddressModal(false);
+  } catch (err: any) {
+    console.error('Error creating order:', err);
+    setError(err.message || 'Failed to create order');
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   if (loading) {
     return (
