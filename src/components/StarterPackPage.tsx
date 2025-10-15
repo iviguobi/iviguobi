@@ -130,7 +130,8 @@ function StarterPackContent() {
   };
 
   const handleAddressSubmit = async (address: DeliveryAddress) => {
-    if (includesTablet) {
+    if (order.total_cost > 0) {
+
       setPendingAddress(address);
       setShowAddressModal(false);
     } else {
