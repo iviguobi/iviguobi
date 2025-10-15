@@ -635,12 +635,12 @@ const SupportPortal: React.FC = () => {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#E6A85C] via-[#E85A9B] to-[#D946EF] rounded-xl flex items-center justify-center">
               <Headphones className="h-6 w-6 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 font-['Space_Grotesk']">
-                VOYA Support Portal
+                Voya Support Portal
               </h1>
               <div className="flex items-center gap-3">
                 <p className="text-sm text-gray-600">Welcome, {agent.name}</p>
@@ -762,7 +762,7 @@ const SupportPortal: React.FC = () => {
                 placeholder="Search chats or restaurants..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E6A85C] focus:border-transparent text-sm"
               />
             </div>
             
@@ -770,7 +770,7 @@ const SupportPortal: React.FC = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#E6A85C] focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -781,7 +781,7 @@ const SupportPortal: React.FC = () => {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-[#E6A85C] focus:border-transparent"
               >
                 <option value="all">All Priority</option>
                 <option value="urgent">Urgent</option>
@@ -796,7 +796,7 @@ const SupportPortal: React.FC = () => {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-600" />
+                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-[#E6A85C]" />
                 <p className="text-gray-500">Loading chats...</p>
               </div>
             ) : filteredSessions.length === 0 ? (
@@ -818,7 +818,7 @@ const SupportPortal: React.FC = () => {
                       key={session.id}
                       onClick={() => setSelectedSession(session)}
                       className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
-                        selectedSession?.id === session.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+                        selectedSession?.id === session.id ? 'bg-gradient-to-r from-[#E6A85C]/10 via-[#E85A9B]/10 to-[#D946EF]/10 border-r-2 border-[#E6A85C]' : ''
                       }`}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -828,7 +828,7 @@ const SupportPortal: React.FC = () => {
                               {session.title}
                             </h3>
                             {isAssignedToMe && (
-                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                              <span className="text-xs bg-gradient-to-r from-[#E6A85C] to-[#E85A9B] text-white px-2 py-1 rounded-full">
                                 Mine
                               </span>
                             )}
@@ -878,7 +878,7 @@ const SupportPortal: React.FC = () => {
               <div className="p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#E6A85C] via-[#E85A9B] to-[#D946EF] rounded-lg flex items-center justify-center text-white font-bold">
                       {selectedSession.restaurant?.name?.[0] || 'R'}
                     </div>
                     <div>
@@ -905,7 +905,7 @@ const SupportPortal: React.FC = () => {
                           key={participant.id}
                           className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                             participant.user_type === 'support_agent'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-gradient-to-r from-[#E6A85C] to-[#E85A9B] text-white'
                               : 'bg-green-100 text-green-800'
                           }`}
                         >
@@ -989,9 +989,9 @@ const SupportPortal: React.FC = () => {
                       <div
                         className={`max-w-xs lg:max-w-md ${
                           isFromMe
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+                            ? 'bg-gradient-to-r from-[#E6A85C] to-[#E85A9B] text-white'
                             : message.sender_type === 'support_agent'
-                            ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                            ? 'bg-gradient-to-r from-[#E6A85C] to-[#E85A9B] text-white'
                             : 'bg-white border border-gray-200'
                         } rounded-2xl px-4 py-3 shadow-sm ${isPending ? 'opacity-70' : ''}`}
                       >
@@ -1126,8 +1126,8 @@ const SupportPortal: React.FC = () => {
                     <button
                       onClick={() => setShowQuickResponses(!showQuickResponses)}
                       className={`p-3 rounded-lg transition-colors ${
-                        showQuickResponses 
-                          ? 'bg-blue-100 text-blue-600' 
+                        showQuickResponses
+                          ? 'bg-gradient-to-r from-[#E6A85C] to-[#E85A9B] text-white'
                           : 'text-gray-600 hover:bg-gray-100'
                       }`}
                       title="Quick responses"
@@ -1146,14 +1146,14 @@ const SupportPortal: React.FC = () => {
                         }
                       }}
                       placeholder="Type your message..."
-                      className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E6A85C] focus:border-transparent"
                       disabled={sendingMessage}
                     />
                     
                     <button
                       onClick={handleSendMessage}
                       disabled={sendingMessage || !newMessage.trim()}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-6 py-3 bg-gradient-to-r from-[#E6A85C] via-[#E85A9B] to-[#D946EF] text-white rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {sendingMessage ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1177,14 +1177,14 @@ const SupportPortal: React.FC = () => {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white p-4 rounded-xl border border-gray-200">
-                    <MessageSquare className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <MessageSquare className="h-8 w-8 text-[#E6A85C] mx-auto mb-2" />
                     <p className="text-lg font-bold text-gray-900">
                       {activeSessions.length}
                     </p>
                     <p className="text-xs text-gray-600">Active Chats</p>
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-gray-200">
-                    <User className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                    <User className="h-8 w-8 text-[#E85A9B] mx-auto mb-2" />
                     <p className="text-lg font-bold text-gray-900">
                       {myAssignedSessions.length}
                     </p>

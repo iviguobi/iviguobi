@@ -130,20 +130,19 @@ export class ChatService {
   static async getAllChatSessions(): Promise<ChatSession[]> {
   try {
     console.log('🔍 [SUPPORT PORTAL] Fetching ALL chat sessions across ALL restaurants');
-    
+
     // Try using the service role bypass function first
     console.log('🔍 [SUPPORT PORTAL] Trying service role bypass function...');
     const { data: bypassData, error: bypassError } = await supabase.rpc('get_all_chat_sessions_for_support');
-    
+
     if (!bypassError && bypassData) {
       console.log('✅ [SUPPORT PORTAL] Service role bypass successful:', {
         totalSessions: bypassData.length,
         restaurants: [...new Set(bypassData.map((s: any) => s.restaurant_name))].filter(Boolean)
       });
-      
-      // Transform and filter out closed sessions
+
+      // Transform data - include ALL sessions (including closed)
       const transformedData = bypassData
-        .filter((session: any) => session.status !== 'closed')
         .map((session: any) => ({
           ...session,
           restaurant: session.restaurant_name ? {
@@ -155,9 +154,9 @@ export class ChatService {
 
       return transformedData;
     }
-    
+
     console.warn('⚠️ [SUPPORT PORTAL] Service role bypass failed, trying direct query:', bypassError);
-    
+
     // Fallback to direct query
     console.log('🔍 [SUPPORT PORTAL] Executing direct chat sessions query...');
     const { data, error } = await supabase
@@ -174,21 +173,20 @@ export class ChatService {
           joined_at
         )
       `)
-      // .neq('status', 'closed')   // 👈 exclude closed 
-     .eq('is_active', true)   // ✅ only fetch active sessions
+      .eq('is_active', true)
       .order('last_message_at', { ascending: false });
 
     if (error) {
       console.error('❌ [SUPPORT PORTAL] Error fetching all chat sessions:', error);
       throw error;
     }
-    
+
     const breakdown = data?.reduce((acc, session) => {
       const restaurantName = session.restaurant?.name || 'Unknown Restaurant';
       acc[restaurantName] = (acc[restaurantName] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
-    
+
     console.log('✅ [SUPPORT PORTAL] Successfully fetched ALL chat sessions:', {
       totalSessions: data?.length || 0,
       uniqueRestaurants: Object.keys(breakdown).length,
@@ -200,7 +198,7 @@ export class ChatService {
         status: s.status
       })) || []
     });
-    
+
     return data || [];
   } catch (error: any) {
     console.error('❌ [SUPPORT PORTAL] Critical error fetching all chat sessions:', error);
@@ -213,7 +211,7 @@ export class ChatService {
   static async getRestaurantChatSessions(restaurantId: string): Promise<ChatSession[]> {
   try {
     console.log('🔍 Fetching chat sessions for restaurant:', restaurantId);
-    
+
     const { data, error } = await supabase
       .from('chat_sessions')
       .select(`
@@ -221,15 +219,14 @@ export class ChatService {
         restaurant:restaurants(name, slug)
       `)
       .eq('restaurant_id', restaurantId)
-      // .neq('status', 'closed')   // 👈 exclude closed 
-     
+      .eq('is_active', true)
       .order('last_message_at', { ascending: false });
 
     if (error) {
       console.error('❌ Error fetching restaurant chat sessions:', error);
       throw error;
     }
-    
+
     console.log('✅ Fetched restaurant chat sessions:', data?.length || 0);
     return data || [];
   } catch (error: any) {
@@ -297,14 +294,14 @@ static async closeChatSession(sessionId: string, agentName: string, agentId?: st
   try {
     console.log("🔒 Closing chat session:", sessionId);
 
-    // Update session status and store who closed it
+    // Update session status and store who closed it - keep is_active true so it appears in archived
     const { error } = await supabase
       .from("chat_sessions")
       .update({
-        status: "closed",                  // mark as closed
-        is_active: false,                  // ✅ force inactive
-        closed_at: new Date().toISOString(), // ✅ record close time
-        closed_by: agentName,              // optional: who closed
+        status: "closed",
+        is_active: true,
+        closed_at: new Date().toISOString(),
+        closed_by: agentName,
         assigned_agent_name: agentName,
         assigned_agent_id: agentId || null,
         updated_at: new Date().toISOString(),
