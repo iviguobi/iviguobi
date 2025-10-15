@@ -144,12 +144,14 @@ const processOrder = async (address: DeliveryAddress) => {
   setError(null);
 
   try {
-    // 1️⃣ Create the order
+    // 1️⃣ Create the order first
     const order = await StarterPackService.createOrder(user!.id, includesTablet, address);
 
-    // 2️⃣ If total_cost > 0, we need to charge (regardless of tablet)
+    // 2️⃣ Only process payment if total_cost > 0 (subsequent or tablet)
     if (order.total_cost > 0) {
-      if (!stripe || !elements) throw new Error('Stripe not initialized');
+      if (!stripe || !elements) {
+        throw new Error('Stripe not initialized');
+      }
 
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -162,31 +164,35 @@ const processOrder = async (address: DeliveryAddress) => {
             "Authorization": `Bearer ${session?.access_token}`,
           },
           body: JSON.stringify({
-            amount: order.total_cost, // already in AED, no *100
+            amount: order.total_cost, // don’t multiply by 100
             metadata: { orderId: order.id, orderType: "starter_pack" },
           }),
         }
       );
 
-      if (!response.ok) throw new Error('Payment initialization failed');
+      if (!response.ok) {
+        throw new Error('Payment initialization failed');
+      }
 
       const { clientSecret } = await response.json();
       const cardElement = elements.getElement(CardElement);
-      if (!cardElement) throw new Error('Card element not found');
+
+      if (!cardElement) {
+        throw new Error('Card element not found');
+      }
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: { card: cardElement },
       });
 
-      if (stripeError) throw new Error(stripeError.message);
+      if (stripeError) {
+        throw new Error(stripeError.message);
+      }
 
       await StarterPackService.updateOrderPaymentStatus(order.id, paymentIntent!.id, 'completed');
-    } else {
-      // 3️⃣ Free (first-time) order, mark as complete directly
-      await StarterPackService.updateOrderPaymentStatus(order.id, null, 'completed');
     }
 
-    // 4️⃣ Refresh UI & close modal
+    // 3️⃣ Finalize order UI and refresh
     await loadOrders();
     setIncludesTablet(false);
     setPendingAddress(null);
@@ -198,6 +204,7 @@ const processOrder = async (address: DeliveryAddress) => {
     setIsProcessing(false);
   }
 };
+
 
 
   if (loading) {
