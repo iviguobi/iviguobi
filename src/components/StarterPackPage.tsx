@@ -131,17 +131,11 @@ function StarterPackContent() {
 
   const handleAddressSubmit = async (address: DeliveryAddress) => {
   try {
-    // Create a temporary order first to check cost
-    const tempOrder = await StarterPackService.createOrder(user!.id, includesTablet, address);
+    setPendingAddress(address);
+    setShowAddressModal(false);
 
-    if (tempOrder.total_cost > 0) {
-      // Payment required (subsequent or tablet order)
-      setPendingAddress(address);
-      setShowAddressModal(false);
-    } else {
-      // Free (first) order, proceed directly
-      await processOrder(address);
-    }
+    // 👇 Call processOrder directly — it will handle both free and paid orders
+    await processOrder(address);
   } catch (error) {
     console.error('Error submitting address:', error);
     setError('Failed to submit address');
